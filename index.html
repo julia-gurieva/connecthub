@@ -6,6 +6,10 @@
   <title>ConnectHub Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800">
   <div id="app" class="max-w-md mx-auto min-h-screen bg-white shadow-xl flex flex-col relative overflow-hidden">
@@ -22,7 +26,7 @@
               <div id="sidebar-user" class="text-xs text-gray-400"></div>
             </div>
           </div>
-          <button onclick="toggleSidebar()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+          <button onclick="toggleSidebar()" class="text-gray-400 hover:text-gray-600 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
  
         <!-- Смена аватарки -->
@@ -59,7 +63,7 @@
       <div class="text-center space-y-2">
         <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto text-2xl font-black shadow-lg">C</div>
         <h1 class="text-2xl font-extrabold text-gray-900">ConnectHub</h1>
-        <p class="text-xs text-gray-400">Выберите аккаунт для входа</p>
+        <p class="text-xs text-gray-400">Выберите аккаунт для входа или создайте новый</p>
       </div>
  
       <div class="space-y-3">
@@ -69,13 +73,9 @@
  
       <div class="border-t pt-4 space-y-3">
         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Новый пользователь:</label>
-        <input id="new-username" type="text" placeholder="Никнейм (например, alex)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
-        <input id="new-displayname" type="text" placeholder="Имя (например, Алексей)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        <input id="new-username" type="text" placeholder="Никнейм латиницей (например, julia)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        <input id="new-displayname" type="text" placeholder="Имя (например, Юлия)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
         <button onclick="registerUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold p-3 rounded-xl text-xs transition shadow-md cursor-pointer">Создать и войти</button>
-      </div>
-      
-      <div class="text-center pt-2">
-        <button onclick="resetApp()" class="text-[11px] text-red-400 hover:underline cursor-pointer">Сбросить все данные</button>
       </div>
     </div>
  
@@ -197,46 +197,110 @@
   </div>
  
   <script>
-    // Защищенная загрузка данных с автоисправлением старой структуры
-    let rawUsers = JSON.parse(localStorage.getItem('ch_users'));
-    let users = Array.isArray(rawUsers) && rawUsers.length > 0 ? rawUsers : [
-      { username: 'alex', displayName: 'Алексей Смирнов', avatar: '', friends: ['maria'], requests: [] },
-      { username: 'maria', displayName: 'Мария Иванова', avatar: '', friends: ['alex'], requests: [] },
-      { username: 'ilya', displayName: 'Илья Петров', avatar: '', friends: [], requests: [] }
-    ];
+    // Инициализация Firebase с вашими ключами
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVFp2gr87fTlzcfDP-JNEjuQtvyEBnb_w",
+      authDomain: "connecthub-b2c5a.firebaseapp.com",
+      projectId: "connecthub-b2c5a",
+      storageBucket: "connecthub-b2c5a.firebasestorage.app",
+      messagingSenderId: "143753311006",
+      appId: "1:143753311006:web:79848e078dbe8e4a5f0f0f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
  
-    // Гарантируем наличие всех нужных полей у каждого пользователя
-    users = users.map(u => ({
-      username: u.username || 'user',
-      displayName: u.displayName || 'Пользователь',
-      avatar: u.avatar || '',
-      friends: Array.isArray(u.friends) ? u.friends : [],
-      requests: Array.isArray(u.requests) ? u.requests : []
-    }));
- 
+    let users = [];
     let currentUser = JSON.parse(localStorage.getItem('ch_current_user')) || null;
-    
-    let rawPosts = JSON.parse(localStorage.getItem('ch_posts')) || [];
-    let posts = rawPosts.map(p => ({
-      id: p.id || Date.now(),
-      author: p.author || 'Пользователь',
-      username: p.username || 'user',
-      text: p.text || '',
-      imageUrl: p.imageUrl || '',
-      likes: typeof p.likes === 'number' ? p.likes : 0,
-      likedBy: Array.isArray(p.likedBy) ? p.likedBy : [],
-      comments: Array.isArray(p.comments) ? p.comments.map(c => ({
-        author: c.author || 'Пользователь',
-        username: c.username || 'user',
-        text: c.text || ''
-      })) : []
-    }));
- 
-    let groupMsgs = JSON.parse(localStorage.getItem('ch_group_msgs')) || [];
-    let dmMmsgs = JSON.parse(localStorage.getItem('ch_dm_msgs')) || [];
-    let notifications = JSON.parse(localStorage.getItem('ch_notifications')) || [];
- 
+    let posts = [];
+    let groupMsgs = [];
+    let dmMmsgs = [];
+    let notifications = [];
     let activeDmUser = null;
+ 
+    // Первичная проверка базы данных и запуск слушателей реального времени
+    function initFirebaseListeners() {
+      // 1. Слушаем пользователей
+      db.collection('users').onSnapshot(snapshot => {
+        users = [];
+        snapshot.forEach(doc => {
+          users.push(doc.data());
+        });
+ 
+        // Если база пустая, создадим дефолтных юзеров
+        if (users.length === 0) {
+          const defaults = [
+            { username: 'alex', displayName: 'Алексей Смирнов', avatar: '', friends: ['maria'], requests: [] },
+            { username: 'maria', displayName: 'Мария Иванова', avatar: '', friends: ['alex'], requests: [] },
+            { username: 'ilya', displayName: 'Илья Петров', avatar: '', friends: [], requests: [] }
+          ];
+          defaults.forEach(u => db.collection('users').doc(u.username).set(u));
+          return;
+        }
+ 
+        if (currentUser) {
+          const found = users.find(u => u.username === currentUser.username);
+          if (found) currentUser = found;
+        }
+        
+        checkAuthAndRender();
+      });
+ 
+      // 2. Слушаем посты
+      db.collection('posts').orderBy('id', 'desc').onSnapshot(snapshot => {
+        posts = [];
+        snapshot.forEach(doc => {
+          posts.push(doc.data());
+        });
+        renderPosts();
+      });
+ 
+      // 3. Слушаем общий чат
+      db.collection('groupMsgs').orderBy('time', 'asc').onSnapshot(snapshot => {
+        groupMsgs = [];
+        snapshot.forEach(doc => {
+          groupMsgs.push(doc.data());
+        });
+        renderGroupMessages();
+      });
+ 
+      // 4. Слушаем личные сообщения
+      db.collection('dmMsgs').orderBy('time', 'asc').onSnapshot(snapshot => {
+        dmMmsgs = [];
+        snapshot.forEach(doc => {
+          dmMmsgs.push(doc.data());
+        });
+        renderDmMessages();
+      });
+ 
+      // 5. Слушаем уведомления
+      db.collection('notifications').orderBy('timeOrder', 'desc').onSnapshot(snapshot => {
+        notifications = [];
+        snapshot.forEach(doc => {
+          notifications.push(doc.data());
+        });
+        updateNotificationsUI();
+      });
+    }
+ 
+    function checkAuthAndRender() {
+      if (currentUser && users.some(u => u.username === currentUser.username)) {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('main-screen').classList.remove('hidden');
+ 
+        document.getElementById('sidebar-name').innerText = currentUser.displayName;
+        document.getElementById('sidebar-user').innerText = '@' + currentUser.username;
+        document.getElementById('sidebar-avatar-container').innerHTML = getAvatarHtml(currentUser, 'w-10 h-10 text-sm');
+        document.getElementById('header-avatar-container').innerHTML = getAvatarHtml(currentUser, 'w-8 h-8 text-xs');
+        document.getElementById('avatar-url-input').value = currentUser.avatar || '';
+ 
+        renderDmBar();
+        renderFriendsList();
+      } else {
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('main-screen').classList.add('hidden');
+        renderAuthUsers();
+      }
+    }
  
     function getAvatarHtml(userObj, size = 'w-8 h-8 text-xs') {
       const name = userObj ? userObj.displayName : 'User';
@@ -259,48 +323,11 @@
       return users.find(u => u.username === username) || { username, displayName: username, avatar: '' };
     }
  
-    function init() {
-      saveData();
-      if (currentUser && users.some(u => u.username === currentUser.username)) {
-        currentUser = users.find(u => u.username === currentUser.username);
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('main-screen').classList.remove('hidden');
- 
-        document.getElementById('sidebar-name').innerText = currentUser.displayName;
-        document.getElementById('sidebar-user').innerText = '@' + currentUser.username;
-        document.getElementById('sidebar-avatar-container').innerHTML = getAvatarHtml(currentUser, 'w-10 h-10 text-sm');
-        document.getElementById('header-avatar-container').innerHTML = getAvatarHtml(currentUser, 'w-8 h-8 text-xs');
-        document.getElementById('avatar-url-input').value = currentUser.avatar || '';
- 
-        renderPosts();
-        renderDmBar();
-        renderGroupMessages();
-        renderFriendsList();
-        updateNotificationsUI();
-      } else {
-        document.getElementById('auth-screen').classList.remove('hidden');
-        document.getElementById('main-screen').classList.add('hidden');
-        renderAuthUsers();
-      }
-    }
- 
-    function saveData() {
-      localStorage.setItem('ch_users', JSON.stringify(users));
-      localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
-      localStorage.setItem('ch_posts', JSON.stringify(posts));
-      localStorage.setItem('ch_group_msgs', JSON.stringify(groupMsgs));
-      localStorage.setItem('ch_dm_msgs', JSON.stringify(dmMmsgs));
-      localStorage.setItem('ch_notifications', JSON.stringify(notifications));
-    }
- 
     function updateAvatar() {
       const url = document.getElementById('avatar-url-input').value.trim();
       currentUser.avatar = url;
-      const index = users.findIndex(u => u.username === currentUser.username);
-      if (index !== -1) users[index].avatar = url;
- 
-      saveData();
-      init();
+      db.collection('users').doc(currentUser.username).set(currentUser);
+      localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
       alert('Аватарка успешно обновлена!');
     }
  
@@ -352,7 +379,8 @@
  
     function loginAs(username) {
       currentUser = users.find(u => u.username === username);
-      init();
+      localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
+      checkAuthAndRender();
     }
  
     function registerUser() {
@@ -365,39 +393,35 @@
       if (users.some(u => u.username === username)) return alert('Логин уже занят!');
  
       const newUser = { username, displayName, avatar: '', friends: [], requests: [] };
-      users.push(newUser);
+      db.collection('users').doc(username).set(newUser);
       currentUser = newUser;
+      localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
       uInput.value = ''; dInput.value = '';
-      init();
     }
  
     function logout() {
       currentUser = null;
-      init();
-    }
- 
-    function resetApp() {
-      if (confirm('Сбросить все данные?')) {
-        localStorage.clear();
-        location.reload();
-      }
+      localStorage.removeItem('ch_current_user');
+      checkAuthAndRender();
     }
  
     // --- Уведомления ---
     function addNotification(targetUsername, typeText) {
       if (targetUsername === currentUser.username) return;
-      notifications.unshift({
+      const notifId = 'notif_' + Date.now() + '_' + Math.random();
+      db.collection('notifications').doc(notifId).set({
+        id: notifId,
         targetUser: targetUsername,
         fromName: currentUser.displayName,
         fromUsername: currentUser.username,
         text: typeText,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timeOrder: Date.now()
       });
-      saveData();
-      updateNotificationsUI();
     }
  
     function updateNotificationsUI() {
+      if (!currentUser) return;
       const userNotifs = notifications.filter(n => n.targetUser === currentUser.username);
       const count = userNotifs.length;
  
@@ -435,9 +459,10 @@
     }
  
     function clearNotifications() {
-      notifications = notifications.filter(n => n.targetUser !== currentUser.username);
-      saveData();
-      updateNotificationsUI();
+      if (!currentUser) return;
+      notifications.filter(n => n.targetUser === currentUser.username).forEach(n => {
+        db.collection('notifications').doc(n.id).delete();
+      });
     }
  
     // --- Система друзей ---
@@ -458,7 +483,8 @@
       if (targetUser.requests.includes(currentUser.username)) return alert('Заявка этому пользователю уже отправлена!');
  
       targetUser.requests.push(currentUser.username);
-      saveData();
+      db.collection('users').doc(targetUser.username).set(targetUser);
+      
       addNotification(targetUsername, 'отправил(а) вам заявку в друзья');
       input.value = '';
       alert(`Заявка в друзья отправлена пользователю ${targetUser.displayName}!`);
@@ -476,13 +502,16 @@
  
       currentUser.requests = (currentUser.requests || []).filter(u => u !== fromUsername);
  
-      saveData();
+      db.collection('users').doc(currentUser.username).set(currentUser);
+      db.collection('users').doc(fromUser.username).set(fromUser);
+ 
       addNotification(fromUsername, 'принял(а) вашу заявку в друзья');
       renderFriendsList();
       alert(`Вы теперь друзья с ${fromUser.displayName}!`);
     }
  
     function renderFriendsList() {
+      if (!currentUser) return;
       const reqBox = document.getElementById('incoming-requests-box');
       const reqList = document.getElementById('incoming-requests-list');
       const requests = currentUser.requests || [];
@@ -542,12 +571,15 @@
  
       if (!text && !imageUrl) return;
  
-      posts.unshift({
-        id: Date.now(),
+      const postId = Date.now();
+      const newPost = {
+        id: postId,
         author: currentUser.displayName,
         username: currentUser.username,
         text, imageUrl, likes: 0, likedBy: [], comments: []
-      });
+      };
+ 
+      db.collection('posts').doc(postId.toString()).set(newPost);
  
       document.getElementById('post-text').value = '';
       document.getElementById('post-img').value = '';
@@ -555,9 +587,6 @@
       (currentUser.friends || []).forEach(fUsername => {
         addNotification(fUsername, 'опубликовал(а) новый пост');
       });
- 
-      saveData();
-      renderPosts();
     }
  
     function likePost(id) {
@@ -575,8 +604,7 @@
         post.likes = Math.max(0, post.likes - 1);
       }
  
-      saveData();
-      renderPosts();
+      db.collection('posts').doc(id.toString()).set(post);
     }
  
     function addComment(id) {
@@ -586,15 +614,18 @@
  
       const post = posts.find(p => p.id === id);
       if (post) {
+        if (!post.comments) post.comments = [];
         post.comments.push({ author: currentUser.displayName, username: currentUser.username, text });
         addNotification(post.username, 'прокомментировал(а) ваш пост');
-        saveData();
-        renderPosts();
+        db.collection('posts').doc(id.toString()).set(post);
+        input.value = '';
       }
     }
  
     function renderPosts() {
       const container = document.getElementById('posts-container');
+      if (!container || !currentUser) return;
+ 
       if (posts.length === 0) {
         container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-gray-400 text-xs shadow-sm">Лента пуста</div>`;
         return;
@@ -627,7 +658,7 @@
  
             <div class="space-y-2 border-t pt-2">
               <div class="space-y-1">
-                ${p.comments.map(c => {
+                ${(p.comments || []).map(c => {
                   const commAuthorObj = getUserByUsername(c.username);
                   return `
                     <div class="text-[11px] bg-gray-50 p-2 rounded-lg flex items-center gap-2">
@@ -635,135 +666,4 @@
                       <div>
                         <span class="font-bold text-gray-700">${c.author}:</span>
                         <span class="text-gray-600">${c.text}</span>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-              <div class="flex gap-2 pt-1">
-                <input id="comment-input-${p.id}" type="text" placeholder="Комментарий..." class="flex-1 border p-1.5 rounded-lg text-xs outline-none">
-                <button onclick="addComment(${p.id})" class="bg-gray-100 text-xs px-3 py-1.5 rounded-lg font-medium cursor-pointer">Отправить</button>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
  
-    // --- Чаты ---
-    function setChatMode(mode) {
-      const isDm = mode === 'dm';
-      document.getElementById('dm-section').classList.toggle('hidden', !isDm);
-      document.getElementById('group-section').classList.toggle('hidden', isDm);
- 
-      document.getElementById('chat-mode-dm').className = isDm ? 'flex-1 py-2 rounded-lg bg-white shadow text-blue-600 font-bold cursor-pointer' : 'flex-1 py-2 rounded-lg text-gray-500 cursor-pointer';
-      document.getElementById('chat-mode-group').className = !isDm ? 'flex-1 py-2 rounded-lg bg-white shadow text-blue-600 font-bold cursor-pointer' : 'flex-1 py-2 rounded-lg text-gray-500 cursor-pointer';
-    }
- 
-    function renderDmBar() {
-      const container = document.getElementById('dm-users-bar');
-      const others = users.filter(u => u.username !== currentUser.username);
- 
-      if (others.length === 0) {
-        container.innerHTML = `<div class="text-xs text-gray-400">Нет других пользователей.</div>`;
-        return;
-      }
- 
-      container.innerHTML = others.map(u => `
-        <button onclick="selectDmUser('${u.username}')" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-blue-50 border ${activeDmUser && activeDmUser.username === u.username ? 'border-blue-500 bg-blue-50' : 'border-gray-100'} w-20 shrink-0 transition cursor-pointer">
-          ${getAvatarHtml(u, 'w-9 h-9 text-xs')}
-          <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${u.displayName}</div>
-        </button>
-      `).join('');
-    }
- 
-    function selectDmUser(username) {
-      activeDmUser = users.find(u => u.username === username);
-      document.getElementById('dm-chat-box').classList.remove('hidden');
-      document.getElementById('dm-partner-title').innerHTML = `${getAvatarHtml(activeDmUser, 'w-6 h-6 text-[10px]')} ${activeDmUser.displayName} (@${activeDmUser.username})`;
-      renderDmMessages();
-      renderDmBar();
-    }
- 
-    function sendDm() {
-      const input = document.getElementById('dm-input');
-      const text = input.value.trim();
-      if (!text || !activeDmUser) return;
- 
-      dmMmsgs.push({
-        from: currentUser.username,
-        to: activeDmUser.username,
-        text
-      });
- 
-      addNotification(activeDmUser.username, 'отправил(а) вам личное сообщение');
- 
-      input.value = '';
-      saveData();
-      renderDmMessages();
-    }
- 
-    function renderDmMessages() {
-      const box = document.getElementById('dm-messages');
-      if (!activeDmUser) return;
- 
-      const filtered = dmMmsgs.filter(m => 
-        (m.from === currentUser.username && m.to === activeDmUser.username) ||
-        (m.from === activeDmUser.username && m.to === currentUser.username)
-      );
- 
-      if (filtered.length === 0) {
-        box.innerHTML = `<div class="text-center text-gray-400 text-xs my-auto">Начните диалог первым!</div>`;
-        return;
-      }
- 
-      box.innerHTML = filtered.map(m => `
-        <div class="text-xs p-2.5 rounded-xl max-w-[80%] ${m.from === currentUser.username ? 'bg-blue-600 text-white ml-auto' : 'bg-white border text-gray-800'}">
-          ${m.text}
-        </div>
-      `).join('');
-      box.scrollTop = box.scrollHeight;
-    }
- 
-    function sendGroup() {
-      const input = document.getElementById('group-input');
-      const text = input.value.trim();
-      if (!text) return;
- 
-      groupMsgs.push({
-        author: currentUser.displayName,
-        username: currentUser.username,
-        text
-      });
- 
-      input.value = '';
-      saveData();
-      renderGroupMessages();
-    }
- 
-    function renderGroupMessages() {
-      const box = document.getElementById('group-messages');
-      if (groupMsgs.length === 0) {
-        box.innerHTML = `<div class="text-center text-gray-400 text-xs my-auto">Общий чат пуст.</div>`;
-        return;
-      }
- 
-      box.innerHTML = groupMsgs.map(m => {
-        const authorObj = getUserByUsername(m.username);
-        return `
-          <div class="flex items-start gap-2 max-w-[85%] ${m.username === currentUser.username ? 'ml-auto flex-row-reverse' : ''}">
-            ${getAvatarHtml(authorObj, 'w-6 h-6 text-[10px]')}
-            <div class="text-xs p-2.5 rounded-xl ${m.username === currentUser.username ? 'bg-blue-600 text-white' : 'bg-white border text-gray-800'}">
-              <div class="font-bold opacity-75 text-[9px] mb-0.5">${m.author}</div>
-              ${m.text}
-            </div>
-          </div>
-        `;
-      }).join('');
-      box.scrollTop = box.scrollHeight;
-    }
- 
-    init();
-  </script>
-</body>
-</html>
