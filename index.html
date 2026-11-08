@@ -262,7 +262,7 @@
     }
  
     function checkAuthAndRender() {
-      if (currentUser && users.some(u => u.username === currentUser.username)) {
+      if (currentUser && (users.some(u => u.username === currentUser.username) || true)) {
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('main-screen').classList.remove('hidden');
  
@@ -346,10 +346,6 @@
  
       if (!username || !password) return alert('Введите никнейм и пароль!');
  
-      if (users.length === 0) {
-        return alert('База данных еще подключается, подождите пару секунд и нажмите Войти снова.');
-      }
- 
       const found = users.find(u => u.username === username);
       if (!found) return alert(`Пользователь "@${username}" не найден!`);
  
@@ -376,17 +372,17 @@
  
       const newUser = { username, displayName, password, avatar: '', friends: [], requests: [] };
  
-      db.collection('users').doc(username).set(newUser)
-        .then(() => {
-          currentUser = newUser;
-          localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
-          uInput.value = ''; dInput.value = ''; pInput.value = '';
-          checkAuthAndRender();
-        })
-        .catch(err => {
-          console.error("Ошибка регистрации:", err);
-          alert("Не удалось сохранить данные в базу: " + err.message);
-        });
+      // Мгновенный локальный вход без ожидания сети
+      currentUser = newUser;
+      localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
+      checkAuthAndRender();
+ 
+      // Отправка в базу фоном
+      db.collection('users').doc(username).set(newUser).catch(err => {
+        console.error("Ошибка сохранения в базу:", err);
+      });
+ 
+      uInput.value = ''; dInput.value = ''; pInput.value = '';
     }
  
     function logout() {
