@@ -54,30 +54,31 @@
       </div>
  
       <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 text-red-600 transition font-medium text-sm border-t pt-4 cursor-pointer">
-        <i class="fa-solid fa-right-from-bracket w-5"></i> Сменить аккаунт
+        <i class="fa-solid fa-right-from-bracket w-5"></i> Выйти из аккаунта
       </button>
     </aside>
  
-    <!-- Экран авторизации -->
+    <!-- Экран авторизации (БЕЗ СПИСКА ЧУЖИХ АККАУНТОВ) -->
     <div id="auth-screen" class="p-6 my-auto space-y-6">
       <div class="text-center space-y-2">
         <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto text-2xl font-black shadow-lg">C</div>
         <h1 class="text-2xl font-extrabold text-gray-900">ConnectHub</h1>
-        <p class="text-xs text-gray-600">Выберите аккаунт для входа или создайте новый</p>
+        <p class="text-xs text-gray-600">Безопасная социальная сеть</p>
       </div>
  
-      <div class="space-y-3">
-        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Существующие пользователи:</label>
-        <div id="auth-users-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-          <div class="text-xs text-gray-500 text-center py-2">Загрузка пользователей из базы...</div>
-        </div>
+      <!-- Вход в существующий аккаунт по никнейму -->
+      <div class="space-y-3 bg-gray-50 p-4 rounded-2xl border">
+        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Вход в аккаунт:</label>
+        <input id="login-username" type="text" placeholder="Ваш никнейм (например, julia)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-800 font-medium">
+        <button onclick="loginByUsername()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold p-3 rounded-xl text-xs transition shadow-md cursor-pointer">Войти</button>
       </div>
  
+      <!-- Регистрация нового -->
       <div class="border-t pt-4 space-y-3">
-        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Новый пользователь:</label>
+        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Создать новый аккаунт:</label>
         <input id="new-username" type="text" placeholder="Никнейм латиницей (например, julia)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 font-medium">
-        <input id="new-displayname" type="text" placeholder="Имя (например, Юлия)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 font-medium">
-        <button onclick="registerUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold p-3 rounded-xl text-xs transition shadow-md cursor-pointer">Создать и войти</button>
+        <input id="new-displayname" type="text" placeholder="Ваше имя (например, Юлия)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 font-medium">
+        <button onclick="registerUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold p-3 rounded-xl text-xs transition shadow-md cursor-pointer">Зарегистрироваться</button>
       </div>
     </div>
  
@@ -120,7 +121,7 @@
  
           <!-- ЛС -->
           <div id="dm-section" class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
-            <div class="text-xs font-bold text-gray-700 uppercase">Собеседники:</div>
+            <div class="text-xs font-bold text-gray-700 uppercase">Собеседники (друзья):</div>
             <div id="dm-users-bar" class="flex gap-2 overflow-x-auto pb-2"></div>
             
             <div id="dm-chat-box" class="hidden space-y-3">
@@ -149,7 +150,7 @@
           <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
             <div class="text-xs font-bold text-gray-700">Отправить заявку в друзья по никнейму (@):</div>
             <div class="flex gap-2">
-              <input id="friend-search-input" type="text" placeholder="например, alex или maria" class="flex-1 border p-2.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
+              <input id="friend-search-input" type="text" placeholder="например, maria" class="flex-1 border p-2.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
               <button onclick="sendFriendRequest()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-medium cursor-pointer">Запрос</button>
             </div>
           </div>
@@ -225,24 +226,12 @@
           users.push(doc.data());
         });
  
-        if (users.length === 0) {
-          const defaults = [
-            { username: 'alex', displayName: 'Алексей Смирнов', avatar: '', friends: ['maria'], requests: [] },
-            { username: 'maria', displayName: 'Мария Иванова', avatar: '', friends: ['alex'], requests: [] },
-            { username: 'ilya', displayName: 'Илья Петров', avatar: '', friends: [], requests: [] }
-          ];
-          defaults.forEach(u => db.collection('users').doc(u.username).set(u));
-          return;
-        }
- 
         if (currentUser) {
           const found = users.find(u => u.username === currentUser.username);
           if (found) currentUser = found;
         }
         
         checkAuthAndRender();
-      }, error => {
-        console.error("Ошибка подключения к Firestore:", error);
       });
  
       db.collection('posts').orderBy('id', 'desc').onSnapshot(snapshot => {
@@ -286,7 +275,6 @@
       } else {
         document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('main-screen').classList.add('hidden');
-        renderAuthUsers();
       }
     }
  
@@ -348,52 +336,45 @@
       if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar();
     }
  
-    function renderAuthUsers() {
-      const container = document.getElementById('auth-users-list');
-      if (users.length === 0) {
-        container.innerHTML = `<div class="text-xs text-gray-500 text-center py-2">Загрузка данных из облака...</div>`;
+    function loginByUsername() {
+      const input = document.getElementById('login-username');
+      const username = input.value.trim().toLowerCase().replace('@', '');
+      if (!username) return alert('Введите ваш никнейм!');
+ 
+      const found = users.find(u => u.username === username);
+      if (!found) {
+        alert(`Пользователь "@${username}" не найден. Проверьте правильность или зарегистрируйтесь ниже.`);
         return;
       }
-      container.innerHTML = users.map(u => `
-        <button onclick="loginAs('${u.username}')" class="w-full bg-gray-50 hover:bg-blue-50 border p-2.5 rounded-xl flex items-center justify-between transition cursor-pointer">
-          <div class="flex items-center gap-3">
-            ${getAvatarHtml(u)}
-            <div class="text-left">
-              <div class="font-bold text-xs text-gray-900">${u.displayName}</div>
-              <div class="text-[10px] text-gray-500">@${u.username}</div>
-            </div>
-          </div>
-          <span class="text-xs text-blue-600 font-medium">Войти &rarr;</span>
-        </button>
-      `).join('');
-    }
  
-    function loginAs(username) {
-      currentUser = users.find(u => u.username === username);
+      currentUser = found;
       localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
+      input.value = '';
       checkAuthAndRender();
     }
  
     function registerUser() {
       const uInput = document.getElementById('new-username');
       const dInput = document.getElementById('new-displayname');
-      const username = uInput.value.trim().toLowerCase();
+      const username = uInput.value.trim().toLowerCase().replace('@', '');
       const displayName = dInput.value.trim();
  
       if (!username || !displayName) return alert('Заполните все поля!');
-      if (users.some(u => u.username === username)) return alert('Логин уже занят!');
+      if (users.some(u => u.username === username)) return alert('Этот никнейм уже занят другим пользователем!');
  
       const newUser = { username, displayName, avatar: '', friends: [], requests: [] };
       db.collection('users').doc(username).set(newUser);
       currentUser = newUser;
       localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
       uInput.value = ''; dInput.value = '';
+      checkAuthAndRender();
     }
  
     function logout() {
       currentUser = null;
       localStorage.removeItem('ch_current_user');
       checkAuthAndRender();
+      toggleSidebar();
     }
  
     function addNotification(targetUsername, typeText) {
@@ -457,13 +438,13 @@
  
     function sendFriendRequest() {
       const input = document.getElementById('friend-search-input');
-      const targetUsername = input.value.trim().toLowerCase();
+      const targetUsername = input.value.trim().toLowerCase().replace('@', '');
  
       if (!targetUsername) return;
       if (targetUsername === currentUser.username) return alert('Нельзя добавить самого себя!');
  
       const targetUser = users.find(u => u.username === targetUsername);
-      if (!targetUser) return alert('Пользователь с таким никнеймом не найден!');
+      if (!targetUser) return alert(`Пользователь "@${targetUsername}" не найден!`);
  
       if (!currentUser.friends) currentUser.friends = [];
       if (currentUser.friends.includes(targetUsername)) return alert('Вы уже у друг друга в друзьях!');
@@ -678,14 +659,15 @@
     function renderDmBar() {
       const container = document.getElementById('dm-users-bar');
       if (!container || !currentUser) return;
-      const others = users.filter(u => u.username !== currentUser.username);
+      const friendUsernames = currentUser.friends || [];
+      const friendObjects = users.filter(u => friendUsernames.includes(u.username));
  
-      if (others.length === 0) {
-        container.innerHTML = `<div class="text-xs text-gray-500">Нет других пользователей.</div>`;
+      if (friendObjects.length === 0) {
+        container.innerHTML = `<div class="text-xs text-gray-500">Добавьте друзей, чтобы переписываться в личных сообщениях.</div>`;
         return;
       }
  
-      container.innerHTML = others.map(u => `
+      container.innerHTML = friendObjects.map(u => `
         <button onclick="selectDmUser('${u.username}')" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-blue-50 border ${activeDmUser && activeDmUser.username === u.username ? 'border-blue-500 bg-blue-50' : 'border-gray-200'} w-20 shrink-0 transition cursor-pointer">
           ${getAvatarHtml(u, 'w-9 h-9 text-xs')}
           <div class="text-[10px] font-bold text-gray-800 truncate w-full text-center">${u.displayName}</div>
