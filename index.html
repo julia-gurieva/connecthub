@@ -28,14 +28,14 @@
           </div>
           <button onclick="toggleSidebar()" class="text-gray-500 hover:text-gray-700 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
-
+ 
         <!-- Смена аватарки -->
         <div class="bg-gray-50 p-3 rounded-xl border space-y-2">
           <div class="text-xs font-bold text-gray-700 uppercase">Сменить аватарку (ссылка):</div>
           <input id="avatar-url-input" type="text" placeholder="https://..." class="w-full border p-2 text-xs rounded-lg outline-none focus:ring-1 focus:ring-blue-500 bg-white">
           <button onclick="updateAvatar()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs py-1.5 rounded-lg font-medium transition cursor-pointer">Сохранить фото</button>
         </div>
-
+ 
         <nav class="space-y-1">
           <button onclick="switchTab('feed')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition font-medium text-sm cursor-pointer">
             <i class="fa-solid fa-house w-5"></i> Лента новостей
@@ -52,15 +52,12 @@
           </button>
         </nav>
       </div>
-
+ 
       <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 text-red-600 transition font-medium text-sm border-t pt-4 cursor-pointer">
-        <i class="fa-solid fa-ri
-
-
-ght-from-bracket w-5"></i> Выйти из аккаунта
+        <i class="fa-solid fa-right-from-bracket w-5"></i> Выйти из аккаунта
       </button>
     </aside>
-
+ 
     <!-- Экран авторизации с паролем -->
     <div id="auth-screen" class="p-6 my-auto space-y-6">
       <div class="text-center space-y-2">
@@ -68,7 +65,7 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
         <h1 class="text-2xl font-extrabold text-gray-900">ConnectHub</h1>
         <p class="text-xs text-gray-600">Безопасная социальная сеть</p>
       </div>
-
+ 
       <!-- Вход в аккаунт -->
       <div class="space-y-3 bg-gray-50 p-4 rounded-2xl border">
         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Вход в аккаунт:</label>
@@ -76,7 +73,7 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
         <input id="login-password" type="password" placeholder="Пароль" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-800 font-medium">
         <button onclick="loginByUsername()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold p-3 rounded-xl text-xs transition shadow-md cursor-pointer">Войти</button>
       </div>
-
+ 
       <!-- Регистрация -->
       <div class="border-t pt-4 space-y-3">
         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Создать новый аккаунт:</label>
@@ -86,7 +83,7 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
         <button onclick="registerUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold p-3 rounded-xl text-xs transition shadow-md cursor-pointer">Зарегистрироваться</button>
       </div>
     </div>
-
+ 
     <!-- Основной экран -->
     <div id="main-screen" class="hidden flex-1 flex flex-col h-full">
       <!-- Шапка -->
@@ -103,30 +100,27 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
           <div id="header-avatar-container" class="w-8 h-8 rounded-full overflow-hidden bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0"></div>
         </div>
       </header>
-
+ 
       <!-- Контент вкладок -->
       <main class="flex-1 overflow-y-auto p-4 bg-gray-50">
         
         <!-- Вкладка: Лента -->
         <div id="tab-feed" class="space-y-4">
           <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
-            <textarea id="post-text" placeholder="Что нового?" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-blue-500 h-2
-
-
-0 text-gray-800"></textarea>
-            <input id="post-img" type="text" placeholder="Прямая ссылка на картинку (.jpg, .png)..." class="w-full border border-gray-200 bg-gray-50 p-2.5 text-xs rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
+            <textarea id="post-text" placeholder="Что нового?" class="w-full border border-gray-200 bg-gray-50 p-3 rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-blue-500 h-20 text-gray-800"></textarea>
+            <input id="post-img" type="text" placeholder="Ссылка на картинку (.jpg, .png)..." class="w-full border border-gray-200 bg-gray-50 p-2.5 text-xs rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
             <button onclick="createPost()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium p-2.5 rounded-xl text-xs transition cursor-pointer">Опубликовать</button>
           </div>
           <div id="posts-container" class="space-y-4"></div>
         </div>
-
+ 
         <!-- Вкладка: Чат -->
         <div id="tab-chat" class="hidden space-y-3">
           <div class="flex bg-gray-200 p-1 rounded-xl text-xs font-medium">
             <button onclick="setChatMode('dm')" id="chat-mode-dm" class="flex-1 py-2 rounded-lg bg-white shadow text-blue-600 font-bold cursor-pointer">Личные</button>
             <button onclick="setChatMode('group')" id="chat-mode-group" class="flex-1 py-2 rounded-lg text-gray-600 cursor-pointer">Общий чат</button>
           </div>
-
+ 
           <!-- ЛС -->
           <div id="dm-section" class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
             <div class="text-xs font-bold text-gray-700 uppercase">Собеседники (друзья):</div>
@@ -141,7 +135,7 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
               </div>
             </div>
           </div>
-
+ 
           <!-- Общий чат -->
           <div id="group-section" class="hidden bg-white p-4 rounded-2xl shadow-sm border space-y-3">
             <div class="font-bold text-xs text-gray-700 border-b pb-2"><i class="fa-solid fa-users text-blue-600 mr-1"></i> Общая беседа</div>
@@ -152,7 +146,7 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
             </div>
           </div>
         </div>
-
+ 
         <!-- Вкладка: Друзья -->
         <div id="tab-friends" class="hidden space-y-4">
           <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
@@ -162,23 +156,20 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
               <button onclick="sendFriendRequest()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-medium cursor-pointer">Запрос</button>
             </div>
           </div>
-
+ 
           <!-- Входящие заявки -->
           <div id="incoming-requests-box" class="hidden bg-white p-4 rounded-2xl shadow-sm border space-y-3">
             <div class="text-xs font-bold text-amber-600 uppercase">Входящие заявки:</div>
-            <div id="incoming-requests-list" class="space-y-2">
-
-
-</div>
+            <div id="incoming-requests-list" class="space-y-2"></div>
           </div>
-
+ 
           <!-- Список друзей -->
           <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
             <div class="text-xs font-bold text-gray-700 uppercase">Ваши друзья:</div>
             <div id="friends-list" class="space-y-2"></div>
           </div>
         </div>
-
+ 
         <!-- Вкладка: Уведомления -->
         <div id="tab-notifications" class="hidden space-y-3">
           <div class="flex justify-between items-center px-1">
@@ -187,9 +178,9 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
           </div>
           <div id="notifications-list" class="space-y-2"></div>
         </div>
-
+ 
       </main>
-
+ 
       <!-- Нижнее меню навигации -->
       <nav class="flex justify-around bg-white border-t p-2">
         <button onclick="switchTab('feed')" id="nav-feed" class="flex flex-col items-center gap-1 text-blue-600 text-[10px] font-medium py-1 px-3 cursor-pointer">
@@ -207,9 +198,9 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
         </button>
       </nav>
     </div>
-
+ 
   </div>
-
+ 
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBVFp2gr87fTlzcfDP-JNEjuQtvyEBnb_w",
@@ -221,7 +212,7 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-
+ 
     let users = [];
     let currentUser = JSON.parse(localStorage.getItem('ch_current_user')) || null;
     let posts = [];
@@ -229,14 +220,14 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
     let dmMmsgs = [];
     let notifications = [];
     let activeDmUser = null;
-
+ 
     function initFirebaseListeners() {
       db.collection('users').onSnapshot(snapshot => {
         users = [];
         snapshot.forEach(doc => {
           users.push(doc.data());
         });
-
+ 
         if (currentUser) {
           const found = users.find(u => u.username === currentUser.username);
           if (found) currentUser = found;
@@ -244,46 +235,43 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
         
         checkAuthAndRender();
       });
-
+ 
       db.collection('posts').orderBy('id', 'desc').onSnapshot(snapshot => {
         posts = [];
         snapshot.forEach(doc => { posts.push(doc.data()); });
         renderPosts();
       });
-
+ 
       db.collection('groupMsgs').orderBy('time', 'asc').onSnapshot(snapshot => {
         groupMsgs = [];
         snapshot.forEach(doc => { groupMsgs.push(doc.data()); });
         renderGroupMessages();
       });
-
+ 
       db.collection('dmMsgs').orderBy('time', 'asc').onSnapshot(snapshot => {
         dmMmsgs = [];
         snapshot.forEach(doc => { dmMmsgs.push(doc.data()); });
         renderDmMessages();
       });
-
+ 
       db.collection('notifications').orderBy('timeOrder', 'desc').onSnapshot(snapshot => {
         notifications = [];
-        snapshot.forEach(doc => { notifications.push(doc.data()
-
-
-); });
+        snapshot.forEach(doc => { notifications.push(doc.data()); });
         updateNotificationsUI();
       });
     }
-
+ 
     function checkAuthAndRender() {
       if (currentUser && users.some(u => u.username === currentUser.username)) {
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('main-screen').classList.remove('hidden');
-
+ 
         document.getElementById('sidebar-name').innerText = currentUser.displayName;
         document.getElementById('sidebar-user').innerText = '@' + currentUser.username;
         document.getElementById('sidebar-avatar-container').innerHTML = getAvatarHtml(currentUser, 'w-10 h-10 text-sm');
         document.getElementById('header-avatar-container').innerHTML = getAvatarHtml(currentUser, 'w-8 h-8 text-xs');
         document.getElementById('avatar-url-input').value = currentUser.avatar || '';
-
+ 
         renderDmBar();
         renderFriendsList();
       } else {
@@ -291,7 +279,7 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
         document.getElementById('main-screen').classList.add('hidden');
       }
     }
-
+ 
     function getAvatarHtml(userObj, size = 'w-8 h-8 text-xs') {
       const name = userObj ? userObj.displayName : 'User';
       const avatarUrl = userObj ? userObj.avatar : '';
@@ -300,18 +288,18 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
       }
       return createInitialsAvatar(name, size);
     }
-
+ 
     function createInitialsAvatar(name, size) {
       const letter = name ? name.charAt(0).toUpperCase() : '?';
       const colors = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600', 'bg-rose-600'];
       const color = colors[name.charCodeAt(0) % colors.length];
       return `<div class="${size} ${color} text-white rounded-full flex items-center justify-center font-bold shrink-0">${letter}</div>`;
     }
-
+ 
     function getUserByUsername(username) {
       return users.find(u => u.username === username) || { username, displayName: username, avatar: '' };
     }
-
+ 
     function updateAvatar() {
       const url = document.getElementById('avatar-url-input').value.trim();
       currentUser.avatar = url;
@@ -319,7 +307,7 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
       localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
       alert('Аватарка успешно обновлена!');
     }
-
+ 
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebar-overlay');
@@ -332,11 +320,11 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
         overlay.classList.add('hidden');
       }
     }
-
+ 
     function switchTab(tab) {
       document.querySelectorAll('main > div').forEach(div => div.classList.add('hidden'));
       document.getElementById(`tab-${tab}`).classList.remove('hidden');
-
+ 
       ['feed', 'chat', 'friends', 'notifications'].forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
         if (t === tab) {
@@ -345,36 +333,36 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
           btn.className = "flex flex-col items-center gap-1 text-gray-500 text-[10px] font-medium py-1 px-3 cursor-pointer";
         }
       });
-
+ 
       const sidebar = document.getElementById('sidebar');
       if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar();
     }
-
+ 
     function loginByUsername() {
       const uInput = document.getElementById('login-username');
       const pInput = document.getElementById('login-password');
       const username = uInput.value.trim().toLowerCase().replace('@', '');
       const password = pInput.value.trim();
-
-      if (!username || !password
-
-
-) return alert('Введите никнейм и пароль!');
-
+ 
+      if (!username || !password) return alert('Введите никнейм и пароль!');
+ 
+      if (users.length === 0) {
+        return alert('База данных еще подключается, подождите пару секунд и нажмите Войти снова.');
+      }
+ 
       const found = users.find(u => u.username === username);
       if (!found) return alert(`Пользователь "@${username}" не найден!`);
-
-      // Проверка пароля (если у старых аккаунтов пароля нет, разрешаем вход или создаем пустой)
+ 
       if (found.password && found.password !== password) {
         return alert('Неверный пароль!');
       }
-
+ 
       currentUser = found;
       localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
       uInput.value = ''; pInput.value = '';
       checkAuthAndRender();
     }
-
+ 
     function registerUser() {
       const uInput = document.getElementById('new-username');
       const dInput = document.getElementById('new-displayname');
@@ -382,25 +370,32 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
       const username = uInput.value.trim().toLowerCase().replace('@', '');
       const displayName = dInput.value.trim();
       const password = pInput.value.trim();
-
+ 
       if (!username || !displayName || !password) return alert('Заполните все поля, включая пароль!');
       if (users.some(u => u.username === username)) return alert('Этот никнейм уже занят!');
-
+ 
       const newUser = { username, displayName, password, avatar: '', friends: [], requests: [] };
-      db.collection('users').doc(username).set(newUser);
-      currentUser = newUser;
-      localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
-      uInput.value = ''; dInput.value = ''; pInput.value = '';
-      checkAuthAndRender();
+ 
+      db.collection('users').doc(username).set(newUser)
+        .then(() => {
+          currentUser = newUser;
+          localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
+          uInput.value = ''; dInput.value = ''; pInput.value = '';
+          checkAuthAndRender();
+        })
+        .catch(err => {
+          console.error("Ошибка регистрации:", err);
+          alert("Не удалось сохранить данные в базу: " + err.message);
+        });
     }
-
+ 
     function logout() {
       currentUser = null;
       localStorage.removeItem('ch_current_user');
       checkAuthAndRender();
       toggleSidebar();
     }
-
+ 
     function addNotification(targetUsername, typeText) {
       if (targetUsername === currentUser.username) return;
       const notifId = 'notif_' + Date.now() + '_' + Math.random();
@@ -414,16 +409,16 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
         timeOrder: Date.now()
       });
     }
-
+ 
     function updateNotificationsUI() {
       if (!currentUser) return;
       const userNotifs = notifications.filter(n => n.targetUser === currentUser.username);
       const count = userNotifs.length;
-
+ 
       const badgeHeader = document.getElementById('notif-badge-header');
       const badgeFooter = document.getElementById('notif-badge-footer');
       const badgeSidebar = document.getElementById('notif-badge-sidebar');
-
+ 
       [badgeHeader, badgeFooter, badgeSidebar].forEach(b => {
         if (count > 0) {
           b.innerText = count;
@@ -432,13 +427,13 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
           b.classList.add('hidden');
         }
       });
-
+ 
       const container = document.getElementById('notifications-list');
       if (userNotifs.length === 0) {
         container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-gray-500 text-xs shadow-sm">Нет новых уведомлений</div>`;
         return;
       }
-
+ 
       container.innerHTML = userNotifs.map(n => {
         const fromUserObj = getUserByUsername(n.fromUsername);
         return `
@@ -452,33 +447,30 @@ ght-from-bracket w-5"></i> Выйти из аккаунта
         `;
       }).join('');
     }
-
+ 
     function clearNotifications() {
       if (!currentUser) return;
       notifications.filter(n => n.targetUser === currentUser.username).forEach(n => {
         db.collection('notifications').doc(n.id).delete();
       });
     }
-
+ 
     function sendFriendRequest() {
-      const input = document.getElementById('fr
-
-
-iend-search-input');
+      const input = document.getElementById('friend-search-input');
       const targetUsername = input.value.trim().toLowerCase().replace('@', '');
-
+ 
       if (!targetUsername) return;
       if (targetUsername === currentUser.username) return alert('Нельзя добавить самого себя!');
-
+ 
       const targetUser = users.find(u => u.username === targetUsername);
       if (!targetUser) return alert(`Пользователь "@${targetUsername}" не найден!`);
-
+ 
       if (!currentUser.friends) currentUser.friends = [];
       if (currentUser.friends.includes(targetUsername)) return alert('Вы уже у друг друга в друзьях!');
       
       if (!targetUser.requests) targetUser.requests = [];
       if (targetUser.requests.includes(currentUser.username)) return alert('Заявка этому пользователю уже отправлена!');
-
+ 
       targetUser.requests.push(currentUser.username);
       db.collection('users').doc(targetUser.username).set(targetUser);
       
@@ -486,33 +478,33 @@ iend-search-input');
       input.value = '';
       alert(`Заявка в друзья отправлена пользователю ${targetUser.displayName}!`);
     }
-
+ 
     function acceptFriendRequest(fromUsername) {
       const fromUser = users.find(u => u.username === fromUsername);
       if (!fromUser) return;
-
+ 
       if (!currentUser.friends) currentUser.friends = [];
       if (!currentUser.friends.includes(fromUsername)) currentUser.friends.push(fromUsername);
-
+ 
       if (!fromUser.friends) fromUser.friends = [];
       if (!fromUser.friends.includes(currentUser.username)) fromUser.friends.push(currentUser.username);
-
+ 
       currentUser.requests = (currentUser.requests || []).filter(u => u !== fromUsername);
-
+ 
       db.collection('users').doc(currentUser.username).set(currentUser);
       db.collection('users').doc(fromUser.username).set(fromUser);
-
+ 
       addNotification(fromUsername, 'принял(а) вашу заявку в друзья');
       renderFriendsList();
       alert(`Вы теперь друзья с ${fromUser.displayName}!`);
     }
-
+ 
     function renderFriendsList() {
       if (!currentUser) return;
       const reqBox = document.getElementById('incoming-requests-box');
       const reqList = document.getElementById('incoming-requests-list');
       const requests = currentUser.requests || [];
-
+ 
       if (requests.length > 0) {
         reqBox.classList.remove('hidden');
         const reqObjects = users.filter(u => requests.includes(u.username));
@@ -531,15 +523,15 @@ iend-search-input');
       } else {
         reqBox.classList.add('hidden');
       }
-
+ 
       const container = document.getElementById('friends-list');
       const friendUsernames = currentUser.friends || [];
-
+ 
       if (friendUsernames.length === 0) {
         container.innerHTML = `<div class="text-xs text-gray-500 text-center py-4">У вас пока нет друзей</div>`;
         return;
       }
-
+ 
       const friendObjects = users.filter(u => friendUsernames.includes(u.username));
       container.innerHTML = friendObjects.map(f => `
         <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border">
@@ -550,25 +542,22 @@ iend-search-input');
               <div class="text-[10px] text-gray-500">@${f.username}</div>
             </div>
           </div>
-          <button onclick="openDmFromFriends('${f.username}')" class="text-xs bg-blue-50 text-blue
-
-
--600 px-3 py-1.5 rounded-lg font-medium cursor-pointer">Написать</button>
+          <button onclick="openDmFromFriends('${f.username}')" class="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg font-medium cursor-pointer">Написать</button>
         </div>
       `).join('');
     }
-
+ 
     function openDmFromFriends(username) {
       switchTab('chat');
       setChatMode('dm');
       selectDmUser(username);
     }
-
+ 
     function createPost() {
       const text = document.getElementById('post-text').value.trim();
       const imageUrl = document.getElementById('post-img').value.trim();
       if (!text && !imageUrl) return;
-
+ 
       const postId = Date.now();
       const newPost = {
         id: postId,
@@ -576,7 +565,7 @@ iend-search-input');
         username: currentUser.username,
         text, imageUrl, likes: 0, likedBy: [], comments: []
       };
-
+ 
       db.collection('posts').doc(postId.toString()).set(newPost);
       document.getElementById('post-text').value = '';
       document.getElementById('post-img').value = '';
@@ -585,22 +574,19 @@ iend-search-input');
         addNotification(fUsername, 'опубликовал(а) новый пост');
       });
     }
-
-    // Удаление поста
+ 
     function deletePost(id) {
       if (!confirm('Вы уверены, что хотите удалить этот пост?')) return;
-      db.collection('posts').doc(id.toString()).delete().then(() => {
-        // Успешно удалено из базы, слушатель сам обновит ленту
-      }).catch(err => {
+      db.collection('posts').doc(id.toString()).delete().catch(err => {
         console.error("Ошибка удаления:", err);
       });
     }
-
+ 
     function likePost(id) {
       const post = posts.find(p => p.id === id);
       if (!post) return;
       if (!post.likedBy) post.likedBy = [];
-
+ 
       const index = post.likedBy.indexOf(currentUser.username);
       if (index === -1) {
         post.likedBy.push(currentUser.username);
@@ -612,12 +598,12 @@ iend-search-input');
       }
       db.collection('posts').doc(id.toString()).set(post);
     }
-
+ 
     function addComment(id) {
       const input = document.getElementById(`comment-input-${id}`);
       const text = input.value.trim();
       if (!text) return;
-
+ 
       const post = posts.find(p => p.id === id);
       if (post) {
         if (!post.comments) post.comments = [];
@@ -627,28 +613,27 @@ iend-search-input');
         input.value = '';
       }
     }
-
+ 
     function renderPosts() {
       const container = document.getElementById('posts-container');
       if (!container || !currentUser) return;
-
+ 
       if (posts.length === 0) {
         container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-gray-500 text-xs shadow-sm">Лента пуста</div>`;
         return;
       }
-
+ 
       container.innerHTML = posts.map(p => {
         const authorObj = getUserByUsername(p.username);
         const isLiked = p.likedBy && p.likedBy.includes(currentUser.username);
         const likeBtnClass = isLiked 
           ? "text-xs text-red-600 bg-red-100 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer" 
           : "text-xs text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer";
-
-        // Кнопка удаления видна только автору поста
+ 
         const deleteBtnHtml = (p.username === currentUser.username) 
           ? `<button onclick="deletePost(${p.id})" class="text-xs text-gray-400 hover:text-red-600 ml-auto cursor-pointer" title="Удалить пост"><i class="fa-solid fa-trash"></i></button>`
           : '';
-
+ 
         return `
           <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
             <div class="flex items-center gap-3">
@@ -658,10 +643,7 @@ iend-search-input');
                 <div class="text-[10px] text-gray-500">@${p.username}</div>
               </div>
               ${deleteBtnHtml}
-
-
-
-</div>
+            </div>
             ${p.text ? `<p class="text-xs text-gray-800 leading-relaxed">${p.text}</p>` : ''}
             ${p.imageUrl ? `<img src="${p.imageUrl}" class="w-full max-h-72 object-cover rounded-xl border" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x200?text=Ошибка+картинки';">` : ''}
             
@@ -670,7 +652,7 @@ iend-search-input');
                 ❤️ ${p.likes}
               </button>
             </div>
-
+ 
             <div class="space-y-2 border-t pt-2">
               <div class="space-y-1">
                 ${(p.comments || []).map(c => {
@@ -695,27 +677,27 @@ iend-search-input');
         `;
       }).join('');
     }
-
+ 
     function setChatMode(mode) {
       const isDm = mode === 'dm';
       document.getElementById('dm-section').classList.toggle('hidden', !isDm);
       document.getElementById('group-section').classList.toggle('hidden', isDm);
-
+ 
       document.getElementById('chat-mode-dm').className = isDm ? 'flex-1 py-2 rounded-lg bg-white shadow text-blue-600 font-bold cursor-pointer' : 'flex-1 py-2 rounded-lg text-gray-600 cursor-pointer';
       document.getElementById('chat-mode-group').className = !isDm ? 'flex-1 py-2 rounded-lg bg-white shadow text-blue-600 font-bold cursor-pointer' : 'flex-1 py-2 rounded-lg text-gray-600 cursor-pointer';
     }
-
+ 
     function renderDmBar() {
       const container = document.getElementById('dm-users-bar');
       if (!container || !currentUser) return;
       const friendUsernames = currentUser.friends || [];
       const friendObjects = users.filter(u => friendUsernames.includes(u.username));
-
+ 
       if (friendObjects.length === 0) {
         container.innerHTML = `<div class="text-xs text-gray-500">Добавьте друзей, чтобы переписываться в личных сообщениях.</div>`;
         return;
       }
-
+ 
       container.innerHTML = friendObjects.map(u => `
         <button onclick="selectDmUser('${u.username}')" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-blue-50 border ${activeDmUser && activeDmUser.username === u.username ? 'border-blue-500 bg-blue-50' : 'border-gray-200'} w-20 shrink-0 transition cursor-pointer">
           ${getAvatarHtml(u, 'w-9 h-9 text-xs')}
@@ -723,7 +705,7 @@ iend-search-input');
         </button>
       `).join('');
     }
-
+ 
     function selectDmUser(username) {
       activeDmUser = users.find(u => u.username === username);
       document.getElementById('dm-chat-box').classList.remove('hidden');
@@ -731,16 +713,13 @@ iend-search-input');
       renderDmMessages();
       renderDmBar();
     }
-
+ 
     function sendDm() {
       const input = document.getElementById('dm-input');
       const text = input.value.trim();
       if (!text || !activeDmUser || !currentUser) return;
-
-      const msgId = 'dm_' + Date.now() + '_
-
-
-' + Math.random();
+ 
+      const msgId = 'dm_' + Date.now() + '_' + Math.random();
       db.collection('dmMsgs').doc(msgId).set({
         id: msgId,
         from: currentUser.username,
@@ -748,25 +727,25 @@ iend-search-input');
         text,
         time: Date.now()
       });
-
+ 
       addNotification(activeDmUser.username, 'отправил(а) вам личное сообщение');
       input.value = '';
     }
-
+ 
     function renderDmMessages() {
       const box = document.getElementById('dm-messages');
       if (!box || !activeDmUser || !currentUser) return;
-
+ 
       const filtered = dmMmsgs.filter(m => 
         (m.from === currentUser.username && m.to === activeDmUser.username) ||
         (m.from === activeDmUser.username && m.to === currentUser.username)
       );
-
+ 
       if (filtered.length === 0) {
         box.innerHTML = `<div class="text-center text-gray-500 text-xs my-auto">Начните диалог первым!</div>`;
         return;
       }
-
+ 
       box.innerHTML = filtered.map(m => `
         <div class="text-xs p-2.5 rounded-xl max-w-[80%] ${m.from === currentUser.username ? 'bg-blue-600 text-white ml-auto' : 'bg-white border text-gray-900'}">
           ${m.text}
@@ -774,12 +753,12 @@ iend-search-input');
       `).join('');
       box.scrollTop = box.scrollHeight;
     }
-
+ 
     function sendGroup() {
       const input = document.getElementById('group-input');
       const text = input.value.trim();
       if (!text || !currentUser) return;
-
+ 
       const msgId = 'grp_' + Date.now() + '_' + Math.random();
       db.collection('groupMsgs').doc(msgId).set({
         id: msgId,
@@ -788,19 +767,19 @@ iend-search-input');
         text,
         time: Date.now()
       });
-
+ 
       input.value = '';
     }
-
+ 
     function renderGroupMessages() {
       const box = document.getElementById('group-messages');
       if (!box || !currentUser) return;
-
+ 
       if (groupMsgs.length === 0) {
         box.innerHTML = `<div class="text-center text-gray-500 text-xs my-auto">Общий чат пуст.</div>`;
         return;
       }
-
+ 
       box.innerHTML = groupMsgs.map(m => {
         const authorObj = getUserByUsername(m.username);
         return `
@@ -815,7 +794,7 @@ iend-search-input');
       }).join('');
       box.scrollTop = box.scrollHeight;
     }
-
+ 
     initFirebaseListeners();
   </script>
 </body>
