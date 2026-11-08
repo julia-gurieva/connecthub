@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConnectHub Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+  <div id="app" class="max-w-md mx-auto min-h-screen bg-white shadow-xl flex flex-col relative overflow-hidden">
+    
+    <!-- Боковое выпадающее меню -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-40 transition-opacity"></div>
+    <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-64 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out p-5 flex flex-col justify-between border-r">
+      <div class="space-y-6">
+        <div class="flex items-center justify-between border-b pb-4">
+          <div class="flex items-center gap-3">
+            <div id="sidebar-avatar-container" class="w-10 h-10 rounded-full overflow-hidden bg-blue-600 text-white flex items-center justify-center font-bold shrink-0"></div>
+            <div class="truncate">
+              <div id="sidebar-name" class="font-bold text-sm truncate"></div>
+              <div id="sidebar-user" class="text-xs text-gray-400"></div>
+            </div>
+          </div>
+          <button onclick="toggleSidebar()" class="text-gray-400 hover:text-gray-600 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+ 
+        <!-- Смена аватарки -->
+        <div class="bg-gray-50 p-3 rounded-xl border space-y-2">
+          <div class="text-[11px] font-bold text-gray-500 uppercase">Сменить аватарку (ссылка):</div>
+          <input id="avatar-url-input" type="text" placeholder="https://..." class="w-full border p-2 text-xs rounded-lg outline-none focus:ring-1 focus:ring-blue-500 bg-white">
+          <button onclick="updateAvatar()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs py-1.5 rounded-lg font-medium transition cursor-pointer">Сохранить фото</button>
+        </div>
+ 
+        <nav class="space-y-1">
+          <button onclick="switchTab('feed')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition font-medium text-sm cursor-pointer">
+            <i class="fa-solid fa-house w-5"></i> Лента новостей
+          </button>
+          <button onclick="switchTab('chat')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition font-medium text-sm cursor-pointer">
+            <i class="fa-solid fa-comments w-5"></i> Сообщения
+          </button>
+          <button onclick="switchTab('friends')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition font-medium text-sm cursor-pointer">
+            <i class="fa-solid fa-user-group w-5"></i> Друзья
+          </button>
+          <button onclick="switchTab('notifications')" class="w-full flex items-center justify-between p-3 rounded-xl hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition font-medium text-sm cursor-pointer">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-bell w-5"></i> Уведомления</div>
+            <span id="notif-badge-sidebar" class="hidden bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+          </button>
+        </nav>
+      </div>
+ 
+      <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 text-red-600 transition font-medium text-sm border-t pt-4 cursor-pointer">
+        <i class="fa-solid fa-right-from-bracket w-5"></i> Сменить аккаунт
+      </button>
+    </aside>
+ 
+    <!-- Экран авторизации -->
+    <div id="auth-screen" class="p-6 my-auto space-y-6">
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto text-2xl font-black shadow-lg">C</div>
+        <h1 class="text-2xl font-extrabold text-gray-900">ConnectHub</h1>
+        <p class="text-xs text-gray-400">Выберите аккаунт для входа или создайте новый</p>
+      </div>
+ 
+      <div class="space-y-3">
+        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Существующие пользователи:</label>
+        <div id="auth-users-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+      </div>
+ 
+      <div class="border-t pt-4 space-y-3">
+        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Новый пользователь:</label>
+        <input id="new-username" type="text" placeholder="Никнейм латиницей (например, julia)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        <input id="new-displayname" type="text" placeholder="Имя (например, Юлия)" class="w-full border p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        <button onclick="registerUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold p-3 rounded-xl text-xs transition shadow-md cursor-pointer">Создать и войти</button>
+      </div>
+    </div>
+ 
+    <!-- Основной экран -->
+    <div id="main-screen" class="hidden flex-1 flex flex-col h-full">
+      <!-- Шапка -->
+      <header class="flex justify-between items-center bg-white p-4 border-b sticky top-0 z-30">
+        <div class="flex items-center gap-3">
+          <button onclick="toggleSidebar()" class="text-gray-600 p-1 hover:bg-gray-100 rounded-lg text-lg cursor-pointer"><i class="fa-solid fa-bars"></i></button>
+          <h1 id="page-title" class="font-bold text-lg text-blue-600">ConnectHub</h1>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="switchTab('notifications')" class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full cursor-pointer">
+            <i class="fa-solid fa-bell text-lg"></i>
+            <span id="notif-badge-header" class="hidden absolute top-1 right-1 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+          </button>
+          <div id="header-avatar-container" class="w-8 h-8 rounded-full overflow-hidden bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0"></div>
+        </div>
+      </header>
+ 
+      <!-- Контент вкладок -->
+      <main class="flex-1 overflow-y-auto p-4 bg-gray-50">
+        
+        <!-- Вкладка: Лента -->
+        <div id="tab-feed" class="space-y-4">
+          <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
+            <textarea id="post-text" placeholder="Что нового?" class="w-full border border-gray-100 bg-gray-50 p-3 rounded-xl text-xs resize-none outline-none focus:ring-2 focus:ring-blue-500 h-20"></textarea>
+            <input id="post-img" type="text" placeholder="Ссылка на картинку (необязательно)..." class="w-full border border-gray-100 bg-gray-50 p-2.5 text-xs rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="createPost()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium p-2.5 rounded-xl text-xs transition cursor-pointer">Опубликовать</button>
+          </div>
+          <div id="posts-container" class="space-y-4"></div>
+        </div>
+ 
+        <!-- Вкладка: Чат -->
+        <div id="tab-chat" class="hidden space-y-3">
+          <div class="flex bg-gray-200 p-1 rounded-xl text-xs font-medium">
+            <button onclick="setChatMode('dm')" id="chat-mode-dm" class="flex-1 py-2 rounded-lg bg-white shadow text-blue-600 font-bold cursor-pointer">Личные</button>
+            <button onclick="setChatMode('group')" id="chat-mode-group" class="flex-1 py-2 rounded-lg text-gray-500 cursor-pointer">Общий чат</button>
+          </div>
+ 
+          <!-- ЛС -->
+          <div id="dm-section" class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
+            <div class="text-xs font-bold text-gray-400 uppercase">Собеседники:</div>
+            <div id="dm-users-bar" class="flex gap-2 overflow-x-auto pb-2"></div>
+            
+            <div id="dm-chat-box" class="hidden space-y-3">
+              <div id="dm-partner-title" class="text-xs font-bold text-blue-600 border-b pb-2 flex items-center gap-2"></div>
+              <div id="dm-messages" class="h-60 overflow-y-auto border p-3 rounded-xl bg-gray-50 space-y-2 flex flex-col"></div>
+              <div class="flex gap-2">
+                <input id="dm-input" type="text" placeholder="Сообщение..." class="flex-1 border p-2.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="sendDm()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-xs font-medium cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button>
+              </div>
+            </div>
+          </div>
+ 
+          <!-- Общий чат -->
+          <div id="group-section" class="hidden bg-white p-4 rounded-2xl shadow-sm border space-y-3">
+            <div class="font-bold text-xs text-gray-700 border-b pb-2"><i class="fa-solid fa-users text-blue-600 mr-1"></i> Общая беседа</div>
+            <div id="group-messages" class="h-64 overflow-y-auto border p-3 rounded-xl bg-gray-50 space-y-2 flex flex-col"></div>
+            <div class="flex gap-2">
+              <input id="group-input" type="text" placeholder="Сообщение всем..." class="flex-1 border p-2.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+              <button onclick="sendGroup()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-xs font-medium cursor-pointer"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- Вкладка: Друзья -->
+        <div id="tab-friends" class="hidden space-y-4">
+          <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
+            <div class="text-xs font-bold text-gray-700">Отправить заявку в друзья по никнейму (@):</div>
+            <div class="flex gap-2">
+              <input id="friend-search-input" type="text" placeholder="например, alex или maria" class="flex-1 border p-2.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+              <button onclick="sendFriendRequest()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-medium cursor-pointer">Запрос</button>
+            </div>
+          </div>
+ 
+          <!-- Входящие заявки -->
+          <div id="incoming-requests-box" class="hidden bg-white p-4 rounded-2xl shadow-sm border space-y-3">
+            <div class="text-xs font-bold text-amber-600 uppercase">Входящие заявки:</div>
+            <div id="incoming-requests-list" class="space-y-2"></div>
+          </div>
+ 
+          <!-- Список друзей -->
+          <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
+            <div class="text-xs font-bold text-gray-400 uppercase">Ваши друзья:</div>
+            <div id="friends-list" class="space-y-2"></div>
+          </div>
+        </div>
+ 
+        <!-- Вкладка: Уведомления -->
+        <div id="tab-notifications" class="hidden space-y-3">
+          <div class="flex justify-between items-center px-1">
+            <div class="text-xs font-bold text-gray-400 uppercase">Последние события:</div>
+            <button onclick="clearNotifications()" class="text-xs text-blue-600 hover:underline cursor-pointer">Прочитано</button>
+          </div>
+          <div id="notifications-list" class="space-y-2"></div>
+        </div>
+ 
+      </main>
+ 
+      <!-- Нижнее меню навигации -->
+      <nav class="flex justify-around bg-white border-t p-2">
+        <button onclick="switchTab('feed')" id="nav-feed" class="flex flex-col items-center gap-1 text-blue-600 text-[10px] font-medium py-1 px-3 cursor-pointer">
+          <i class="fa-solid fa-newspaper text-base"></i> Лента
+        </button>
+        <button onclick="switchTab('chat')" id="nav-chat" class="flex flex-col items-center gap-1 text-gray-400 text-[10px] font-medium py-1 px-3 cursor-pointer">
+          <i class="fa-solid fa-message text-base"></i> Чаты
+        </button>
+        <button onclick="switchTab('friends')" id="nav-friends" class="flex flex-col items-center gap-1 text-gray-400 text-[10px] font-medium py-1 px-3 cursor-pointer">
+          <i class="fa-solid fa-user-group text-base"></i> Друзья
+        </button>
+        <button onclick="switchTab('notifications')" id="nav-notifications" class="flex flex-col items-center gap-1 text-gray-400 text-[10px] font-medium py-1 px-3 relative cursor-pointer">
+          <i class="fa-solid fa-bell text-base"></i> Уведомления
+          <span id="notif-badge-footer" class="hidden absolute top-0 right-2 bg-red-500 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">0</span>
+        </button>
+      </nav>
+    </div>
+ 
+  </div>
+ 
+  <script>
+    // Инициализация Firebase с вашими ключами
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVFp2gr87fTlzcfDP-JNEjuQtvyEBnb_w",
+      authDomain: "connecthub-b2c5a.firebaseapp.com",
+      projectId: "connecthub-b2c5a",
+      storageBucket: "connecthub-b2c5a.firebasestorage.app",
+      messagingSenderId: "143753311006",
+      appId: "1:143753311006:web:79848e078dbe8e4a5f0f0f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+ 
+    let users = [];
+    let currentUser = JSON.parse(localStorage.getItem('ch_current_user')) || null;
+    let posts = [];
+    let groupMsgs = [];
+    let dmMmsgs = [];
+    let notifications = [];
+    let activeDmUser = null;
+ 
+    // Первичная проверка базы данных и запуск слушателей реального времени
+    function initFirebaseListeners() {
+      // 1. Слушаем пользователей
+      db.collection('users').onSnapshot(snapshot => {
+        users = [];
+        snapshot.forEach(doc => {
+          users.push(doc.data());
+        });
+ 
+        // Если база пустая, создадим дефолтных юзеров
+        if (users.length === 0) {
+          const defaults = [
+            { username: 'alex', displayName: 'Алексей Смирнов', avatar: '', friends: ['maria'], requests: [] },
+            { username: 'maria', displayName: 'Мария Иванова', avatar: '', friends: ['alex'], requests: [] },
+            { username: 'ilya', displayName: 'Илья Петров', avatar: '', friends: [], requests: [] }
+          ];
+          defaults.forEach(u => db.collection('users').doc(u.username).set(u));
+          return;
+        }
+ 
+        if (currentUser) {
+          const found = users.find(u => u.username === currentUser.username);
+          if (found) currentUser = found;
+        }
+        
+        checkAuthAndRender();
+      });
+ 
+      // 2. Слушаем посты
+      db.collection('posts').orderBy('id', 'desc').onSnapshot(snapshot => {
+        posts = [];
+        snapshot.forEach(doc => {
+          posts.push(doc.data());
+        });
+        renderPosts();
+      });
+ 
+      // 3. Слушаем общий чат
+      db.collection('groupMsgs').orderBy('time', 'asc').onSnapshot(snapshot => {
+        groupMsgs = [];
+        snapshot.forEach(doc => {
+          groupMsgs.push(doc.data());
+        });
+        renderGroupMessages();
+      });
+ 
+      // 4. Слушаем личные сообщения
+      db.collection('dmMsgs').orderBy('time', 'asc').onSnapshot(snapshot => {
+        dmMmsgs = [];
+        snapshot.forEach(doc => {
+          dmMmsgs.push(doc.data());
+        });
+        renderDmMessages();
+      });
+ 
+      // 5. Слушаем уведомления
+      db.collection('notifications').orderBy('timeOrder', 'desc').onSnapshot(snapshot => {
+        notifications = [];
+        snapshot.forEach(doc => {
+          notifications.push(doc.data());
+        });
+        updateNotificationsUI();
+      });
+    }
+ 
+    function checkAuthAndRender() {
+      if (currentUser && users.some(u => u.username === currentUser.username)) {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('main-screen').classList.remove('hidden');
+ 
+        document.getElementById('sidebar-name').innerText = currentUser.displayName;
+        document.getElementById('sidebar-user').innerText = '@' + currentUser.username;
+        document.getElementById('sidebar-avatar-container').innerHTML = getAvatarHtml(currentUser, 'w-10 h-10 text-sm');
+        document.getElementById('header-avatar-container').innerHTML = getAvatarHtml(currentUser, 'w-8 h-8 text-xs');
+        document.getElementById('avatar-url-input').value = currentUser.avatar || '';
+ 
+        renderDmBar();
+        renderFriendsList();
+      } else {
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('main-screen').classList.add('hidden');
+        renderAuthUsers();
+      }
+    }
+ 
+    function getAvatarHtml(userObj, size = 'w-8 h-8 text-xs') {
+      const name = userObj ? userObj.displayName : 'User';
+      const avatarUrl = userObj ? userObj.avatar : '';
+ 
+      if (avatarUrl && avatarUrl.trim() !== '') {
+        return `<img src="${avatarUrl}" class="${size} object-cover rounded-full shrink-0" onerror="this.onerror=null; this.replaceWith(createInitialsAvatar('${name}', '${size}'));">`;
+      }
+      return createInitialsAvatar(name, size);
+    }
+ 
+    function createInitialsAvatar(name, size) {
+      const letter = name ? name.charAt(0).toUpperCase() : '?';
+      const colors = ['bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 'bg-amber-600', 'bg-rose-600'];
+      const color = colors[name.charCodeAt(0) % colors.length];
+      return `<div class="${size} ${color} text-white rounded-full flex items-center justify-center font-bold shrink-0">${letter}</div>`;
+    }
+ 
+    function getUserByUsername(username) {
+      return users.find(u => u.username === username) || { username, displayName: username, avatar: '' };
+    }
+ 
+    function updateAvatar() {
+      const url = document.getElementById('avatar-url-input').value.trim();
+      currentUser.avatar = url;
+      db.collection('users').doc(currentUser.username).set(currentUser);
+      localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
+      alert('Аватарка успешно обновлена!');
+    }
+ 
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      const isHidden = sidebar.classList.contains('-translate-x-full');
+      if (isHidden) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+ 
+    function switchTab(tab) {
+      document.querySelectorAll('main > div').forEach(div => div.classList.add('hidden'));
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+ 
+      ['feed', 'chat', 'friends', 'notifications'].forEach(t => {
+        const btn = document.getElementById(`nav-${t}`);
+        if (t === tab) {
+          btn.className = "flex flex-col items-center gap-1 text-blue-600 text-[10px] font-medium py-1 px-3 cursor-pointer";
+        } else {
+          btn.className = "flex flex-col items-center gap-1 text-gray-400 text-[10px] font-medium py-1 px-3 cursor-pointer";
+        }
+      });
+ 
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar();
+    }
+ 
+    function renderAuthUsers() {
+      const container = document.getElementById('auth-users-list');
+      container.innerHTML = users.map(u => `
+        <button onclick="loginAs('${u.username}')" class="w-full bg-gray-50 hover:bg-blue-50 border p-2.5 rounded-xl flex items-center justify-between transition cursor-pointer">
+          <div class="flex items-center gap-3">
+            ${getAvatarHtml(u)}
+            <div class="text-left">
+              <div class="font-bold text-xs text-gray-800">${u.displayName}</div>
+              <div class="text-[10px] text-gray-400">@${u.username}</div>
+            </div>
+          </div>
+          <span class="text-xs text-blue-600 font-medium">Войти &rarr;</span>
+        </button>
+      `).join('');
+    }
+ 
+    function loginAs(username) {
+      currentUser = users.find(u => u.username === username);
+      localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
+      checkAuthAndRender();
+    }
+ 
+    function registerUser() {
+      const uInput = document.getElementById('new-username');
+      const dInput = document.getElementById('new-displayname');
+      const username = uInput.value.trim().toLowerCase();
+      const displayName = dInput.value.trim();
+ 
+      if (!username || !displayName) return alert('Заполните все поля!');
+      if (users.some(u => u.username === username)) return alert('Логин уже занят!');
+ 
+      const newUser = { username, displayName, avatar: '', friends: [], requests: [] };
+      db.collection('users').doc(username).set(newUser);
+      currentUser = newUser;
+      localStorage.setItem('ch_current_user', JSON.stringify(currentUser));
+      uInput.value = ''; dInput.value = '';
+    }
+ 
+    function logout() {
+      currentUser = null;
+      localStorage.removeItem('ch_current_user');
+      checkAuthAndRender();
+    }
+ 
+    // --- Уведомления ---
+    function addNotification(targetUsername, typeText) {
+      if (targetUsername === currentUser.username) return;
+      const notifId = 'notif_' + Date.now() + '_' + Math.random();
+      db.collection('notifications').doc(notifId).set({
+        id: notifId,
+        targetUser: targetUsername,
+        fromName: currentUser.displayName,
+        fromUsername: currentUser.username,
+        text: typeText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timeOrder: Date.now()
+      });
+    }
+ 
+    function updateNotificationsUI() {
+      if (!currentUser) return;
+      const userNotifs = notifications.filter(n => n.targetUser === currentUser.username);
+      const count = userNotifs.length;
+ 
+      const badgeHeader = document.getElementById('notif-badge-header');
+      const badgeFooter = document.getElementById('notif-badge-footer');
+      const badgeSidebar = document.getElementById('notif-badge-sidebar');
+ 
+      [badgeHeader, badgeFooter, badgeSidebar].forEach(b => {
+        if (count > 0) {
+          b.innerText = count;
+          b.classList.remove('hidden');
+        } else {
+          b.classList.add('hidden');
+        }
+      });
+ 
+      const container = document.getElementById('notifications-list');
+      if (userNotifs.length === 0) {
+        container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-gray-400 text-xs shadow-sm">Нет новых уведомлений</div>`;
+        return;
+      }
+ 
+      container.innerHTML = userNotifs.map(n => {
+        const fromUserObj = getUserByUsername(n.fromUsername);
+        return `
+          <div class="bg-white p-3 rounded-xl shadow-sm border flex items-center gap-3">
+            ${getAvatarHtml(fromUserObj)}
+            <div class="text-xs">
+              <span class="font-bold text-gray-800">${n.fromName}</span> ${n.text}
+              <div class="text-[10px] text-gray-400 mt-0.5">${n.time}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+ 
+    function clearNotifications() {
+      if (!currentUser) return;
+      notifications.filter(n => n.targetUser === currentUser.username).forEach(n => {
+        db.collection('notifications').doc(n.id).delete();
+      });
+    }
+ 
+    // --- Система друзей ---
+    function sendFriendRequest() {
+      const input = document.getElementById('friend-search-input');
+      const targetUsername = input.value.trim().toLowerCase();
+ 
+      if (!targetUsername) return;
+      if (targetUsername === currentUser.username) return alert('Нельзя добавить самого себя!');
+ 
+      const targetUser = users.find(u => u.username === targetUsername);
+      if (!targetUser) return alert('Пользователь с таким никнеймом не найден!');
+ 
+      if (!currentUser.friends) currentUser.friends = [];
+      if (currentUser.friends.includes(targetUsername)) return alert('Вы уже у друг друга в друзьях!');
+      
+      if (!targetUser.requests) targetUser.requests = [];
+      if (targetUser.requests.includes(currentUser.username)) return alert('Заявка этому пользователю уже отправлена!');
+ 
+      targetUser.requests.push(currentUser.username);
+      db.collection('users').doc(targetUser.username).set(targetUser);
+      
+      addNotification(targetUsername, 'отправил(а) вам заявку в друзья');
+      input.value = '';
+      alert(`Заявка в друзья отправлена пользователю ${targetUser.displayName}!`);
+    }
+ 
+    function acceptFriendRequest(fromUsername) {
+      const fromUser = users.find(u => u.username === fromUsername);
+      if (!fromUser) return;
+ 
+      if (!currentUser.friends) currentUser.friends = [];
+      if (!currentUser.friends.includes(fromUsername)) currentUser.friends.push(fromUsername);
+ 
+      if (!fromUser.friends) fromUser.friends = [];
+      if (!fromUser.friends.includes(currentUser.username)) fromUser.friends.push(currentUser.username);
+ 
+      currentUser.requests = (currentUser.requests || []).filter(u => u !== fromUsername);
+ 
+      db.collection('users').doc(currentUser.username).set(currentUser);
+      db.collection('users').doc(fromUser.username).set(fromUser);
+ 
+      addNotification(fromUsername, 'принял(а) вашу заявку в друзья');
+      renderFriendsList();
+      alert(`Вы теперь друзья с ${fromUser.displayName}!`);
+    }
+ 
+    function renderFriendsList() {
+      if (!currentUser) return;
+      const reqBox = document.getElementById('incoming-requests-box');
+      const reqList = document.getElementById('incoming-requests-list');
+      const requests = currentUser.requests || [];
+ 
+      if (requests.length > 0) {
+        reqBox.classList.remove('hidden');
+        const reqObjects = users.filter(u => requests.includes(u.username));
+        reqList.innerHTML = reqObjects.map(r => `
+          <div class="flex items-center justify-between bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+            <div class="flex items-center gap-3">
+              ${getAvatarHtml(r)}
+              <div>
+                <div class="font-bold text-xs text-gray-800">${r.displayName}</div>
+                <div class="text-[10px] text-gray-400">@${r.username}</div>
+              </div>
+            </div>
+            <button onclick="acceptFriendRequest('${r.username}')" class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-medium cursor-pointer">Принять</button>
+          </div>
+        `).join('');
+      } else {
+        reqBox.classList.add('hidden');
+      }
+ 
+      const container = document.getElementById('friends-list');
+      const friendUsernames = currentUser.friends || [];
+ 
+      if (friendUsernames.length === 0) {
+        container.innerHTML = `<div class="text-xs text-gray-400 text-center py-4">У вас пока нет друзей</div>`;
+        return;
+      }
+ 
+      const friendObjects = users.filter(u => friendUsernames.includes(u.username));
+      container.innerHTML = friendObjects.map(f => `
+        <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border">
+          <div class="flex items-center gap-3">
+            ${getAvatarHtml(f)}
+            <div>
+              <div class="font-bold text-xs text-gray-800">${f.displayName}</div>
+              <div class="text-[10px] text-gray-400">@${f.username}</div>
+            </div>
+          </div>
+          <button onclick="openDmFromFriends('${f.username}')" class="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg font-medium cursor-pointer">Написать</button>
+        </div>
+      `).join('');
+    }
+ 
+    function openDmFromFriends(username) {
+      switchTab('chat');
+      setChatMode('dm');
+      selectDmUser(username);
+    }
+ 
+    // --- Лента постов ---
+    function createPost() {
+      const text = document.getElementById('post-text').value.trim();
+      const imageUrl = document.getElementById('post-img').value.trim();
+ 
+      if (!text && !imageUrl) return;
+ 
+      const postId = Date.now();
+      const newPost = {
+        id: postId,
+        author: currentUser.displayName,
+        username: currentUser.username,
+        text, imageUrl, likes: 0, likedBy: [], comments: []
+      };
+ 
+      db.collection('posts').doc(postId.toString()).set(newPost);
+ 
+      document.getElementById('post-text').value = '';
+      document.getElementById('post-img').value = '';
+      
+      (currentUser.friends || []).forEach(fUsername => {
+        addNotification(fUsername, 'опубликовал(а) новый пост');
+      });
+    }
+ 
+    function likePost(id) {
+      const post = posts.find(p => p.id === id);
+      if (!post) return;
+      if (!post.likedBy) post.likedBy = [];
+ 
+      const index = post.likedBy.indexOf(currentUser.username);
+      if (index === -1) {
+        post.likedBy.push(currentUser.username);
+        post.likes++;
+        addNotification(post.username, 'поставил(а) лайк вашей записи');
+      } else {
+        post.likedBy.splice(index, 1);
+        post.likes = Math.max(0, post.likes - 1);
+      }
+ 
+      db.collection('posts').doc(id.toString()).set(post);
+    }
+ 
+    function addComment(id) {
+      const input = document.getElementById(`comment-input-${id}`);
+      const text = input.value.trim();
+      if (!text) return;
+ 
+      const post = posts.find(p => p.id === id);
+      if (post) {
+        if (!post.comments) post.comments = [];
+        post.comments.push({ author: currentUser.displayName, username: currentUser.username, text });
+        addNotification(post.username, 'прокомментировал(а) ваш пост');
+        db.collection('posts').doc(id.toString()).set(post);
+        input.value = '';
+      }
+    }
+ 
+    function renderPosts() {
+      const container = document.getElementById('posts-container');
+      if (!container || !currentUser) return;
+ 
+      if (posts.length === 0) {
+        container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-gray-400 text-xs shadow-sm">Лента пуста</div>`;
+        return;
+      }
+ 
+      container.innerHTML = posts.map(p => {
+        const authorObj = getUserByUsername(p.username);
+        const isLiked = p.likedBy && p.likedBy.includes(currentUser.username);
+        const likeBtnClass = isLiked 
+          ? "text-xs text-red-600 bg-red-100 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer" 
+          : "text-xs text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer";
+ 
+        return `
+          <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
+            <div class="flex items-center gap-3">
+              ${getAvatarHtml(authorObj)}
+              <div>
+                <div class="font-bold text-xs text-gray-800">${p.author}</div>
+                <div class="text-[10px] text-gray-400">@${p.username}</div>
+              </div>
+            </div>
+            ${p.text ? `<p class="text-xs text-gray-700 leading-relaxed">${p.text}</p>` : ''}
+            ${p.imageUrl ? `<img src="${p.imageUrl}" class="w-full max-h-72 object-cover rounded-xl border" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x200?text=Ошибка+картинки';">` : ''}
+            
+            <div class="flex items-center gap-2 border-t pt-2">
+              <button onclick="likePost(${p.id})" class="${likeBtnClass}">
+                ❤️ ${p.likes}
+              </button>
+            </div>
+ 
+            <div class="space-y-2 border-t pt-2">
+              <div class="space-y-1">
+                ${(p.comments || []).map(c => {
+                  const commAuthorObj = getUserByUsername(c.username);
+                  return `
+                    <div class="text-[11px] bg-gray-50 p-2 rounded-lg flex items-center gap-2">
+                      ${getAvatarHtml(commAuthorObj, 'w-5 h-5 text-[9px]')}
+                      <div>
+                        <span class="font-bold text-gray-700">${c.author}:</span>
+                        <span class="text-gray-600">${c.text}</span>
+ 
